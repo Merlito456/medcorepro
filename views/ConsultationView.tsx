@@ -1,15 +1,17 @@
-
 import React, { useState } from 'react';
 import { Mic, FileText, ClipboardList, Thermometer, User, History, Save, Edit3, Wand2, Loader2 } from 'lucide-react';
 import { geminiService } from '../geminiService';
 import { useClinic } from '../ClinicContext';
 
 const ConsultationView: React.FC = () => {
-  const { notify } = useClinic();
+  const { notify, addConsultation } = useClinic();
   const [activeTab, setActiveTab] = useState<'SOAP' | 'Vitals' | 'History'>('SOAP');
   const [notes, setNotes] = useState({ subjective: '', objective: '', assessment: '', plan: '' });
   const [isDrafting, setIsDrafting] = useState(false);
   const [transcript, setTranscript] = useState('');
+
+  // Fixed patient for demo/mock - in production this would be selected from the context
+  const currentPatient = { id: 'PID-8821', name: 'Ramon Magsaysay' };
 
   const handleAIDraft = async () => {
     if (!transcript.trim()) {
@@ -25,12 +27,22 @@ const ConsultationView: React.FC = () => {
     setIsDrafting(false);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!notes.assessment && !notes.plan) {
       notify('Cannot save empty clinical record.', 'error');
       return;
     }
-    notify('Consultation record saved to EMR successfully.');
+    
+    await addConsultation({
+      patientId: currentPatient.id,
+      patientName: currentPatient.name,
+      subjective: notes.subjective,
+      objective: notes.objective,
+      assessment: notes.assessment,
+      plan: notes.plan,
+      transcript: transcript
+    });
+
     setNotes({ subjective: '', objective: '', assessment: '', plan: '' });
     setTranscript('');
   };
@@ -43,8 +55,8 @@ const ConsultationView: React.FC = () => {
             <img src="https://picsum.photos/seed/p1/80/80" className="w-20 h-20 rounded-2xl border-4 border-white shadow-sm" alt="Patient" />
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-2xl font-bold text-slate-900">Ramon Magsaysay</h1>
-                <span className="px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-bold rounded uppercase">PID-8821</span>
+                <h1 className="text-2xl font-bold text-slate-900">{currentPatient.name}</h1>
+                <span className="px-2 py-0.5 bg-blue-100 text-blue-600 text-[10px] font-bold rounded uppercase">{currentPatient.id}</span>
               </div>
               <div className="flex items-center gap-4 text-sm text-slate-500">
                 <span className="flex items-center gap-1"><User className="w-4 h-4" /> 45 yrs, Male</span>
@@ -115,28 +127,72 @@ const ConsultationView: React.FC = () => {
                   </div>
                   <textarea 
                     className="w-full h-24 bg-white border border-slate-200 rounded-xl p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder="Patient describes recurring fatigue and dizziness over the last 3 days..."
+                    placeholder="Describe the consultation or paste a transcript here..."
                     value={transcript}
                     onChange={(e) => setTranscript(e.target.value)}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {Object.keys(notes).map((key) => (
-                    <div key={key} className="space-y-4">
-                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                        {key}
-                      </label>
-                      <textarea 
-                        className="w-full h-40 bg-white border border-slate-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        value={(notes as any)[key]}
-                        onChange={(e) => setNotes({ ...notes, [key]: e.target.value })}
-                        placeholder={`Enter ${key} details...`}
-                      />
-                    </div>
-                  ))}
+                  <div className="space-y-4">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                      Subjective
+                    </label>
+                    <textarea 
+                      className="w-full h-40 bg-white border border-slate-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      value={notes.subjective}
+                      onChange={(e) => setNotes({ ...notes, subjective: e.target.value })}
+                      placeholder="Chief complaints, history of present illness..."
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                      Objective
+                    </label>
+                    <textarea 
+                      className="w-full h-40 bg-white border border-slate-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      value={notes.objective}
+                      onChange={(e) => setNotes({ ...notes, objective: e.target.value })}
+                      placeholder="Physical findings, vitals recorded..."
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                      Assessment
+                    </label>
+                    <textarea 
+                      className="w-full h-40 bg-white border border-slate-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      value={notes.assessment}
+                      onChange={(e) => setNotes({ ...notes, assessment: e.target.value })}
+                      placeholder="Diagnosis or diagnostic considerations..."
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-indigo-500"></span>
+                      Plan
+                    </label>
+                    <textarea 
+                      className="w-full h-40 bg-white border border-slate-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      value={notes.plan}
+                      onChange={(e) => setNotes({ ...notes, plan: e.target.value })}
+                      placeholder="Treatments, medications, follow-up..."
+                    />
+                  </div>
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'History' && (
+              <div className="space-y-6 max-w-4xl">
+                 <h2 className="text-xl font-bold text-slate-900 mb-4">Past Medical Encounters</h2>
+                 <div className="p-12 text-center text-slate-400 border-2 border-dashed border-slate-100 rounded-3xl">
+                    <History className="w-12 h-12 mx-auto mb-4 opacity-10" />
+                    <p className="font-medium">Recent consultation records will appear here.</p>
+                 </div>
               </div>
             )}
           </div>
