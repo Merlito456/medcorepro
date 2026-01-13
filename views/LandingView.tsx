@@ -25,13 +25,19 @@ import {
 } from 'lucide-react';
 
 interface LandingViewProps {
-  onLoginSuccess: () => void;
+  onLoginSuccess: (userData: { name: string; license: string }) => void;
 }
 
 const LandingView: React.FC<LandingViewProps> = ({ onLoginSuccess }) => {
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   const [isLoading, setIsLoading] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    license: '',
+    email: '',
+    password: ''
+  });
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,10 +67,18 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginSuccess }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    
     // Simulate auth network delay
     setTimeout(() => {
       setIsLoading(false);
-      onLoginSuccess();
+      // If logging in without typing a name, use a fallback or what's in state
+      const finalName = formData.name || (authMode === 'login' ? 'Dr. Juan Dela Cruz' : 'New Physician');
+      const finalLicense = formData.license || '0000000';
+      
+      onLoginSuccess({
+        name: finalName,
+        license: finalLicense
+      });
     }, 1200);
   };
 
@@ -109,12 +123,10 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginSuccess }) => {
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden shrink-0">
-        {/* Background Accents */}
         <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-[800px] h-[800px] bg-blue-100/30 rounded-full blur-3xl -z-10" />
         <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-indigo-100/20 rounded-full blur-3xl -z-10" />
 
         <div className="max-w-7xl mx-auto px-8 lg:px-20 flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
-          {/* Left: Content */}
           <div className="flex-1 space-y-8 animate-in slide-in-from-left duration-700">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-xs font-bold uppercase tracking-wider border border-blue-100">
               <Sparkles className="w-4 h-4" /> The New Standard in Digital Healthcare
@@ -151,7 +163,6 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          {/* Right: Auth Card */}
           <div className="w-full lg:w-[480px] shrink-0 animate-in zoom-in fade-in duration-1000">
             <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-blue-900/10 border border-slate-100 relative overflow-hidden backdrop-blur-xl">
               <div className="absolute top-0 right-0 p-8">
@@ -182,6 +193,8 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginSuccess }) => {
                         type="text" 
                         placeholder="Dr. Juan Dela Cruz, FPCP"
                         className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all text-sm font-medium"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       />
                     </div>
                   </div>
@@ -196,6 +209,8 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginSuccess }) => {
                       type="text" 
                       placeholder="7-digit License No."
                       className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all text-sm font-medium font-mono"
+                      value={formData.license}
+                      onChange={(e) => setFormData({ ...formData, license: e.target.value })}
                     />
                   </div>
                 </div>
@@ -209,6 +224,8 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginSuccess }) => {
                       type="email" 
                       placeholder="physician@medcore.ph"
                       className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all text-sm font-medium"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />
                   </div>
                 </div>
@@ -225,6 +242,8 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginSuccess }) => {
                       type="password" 
                       placeholder="••••••••"
                       className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all text-sm font-medium"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     />
                   </div>
                 </div>
@@ -380,7 +399,6 @@ const LandingView: React.FC<LandingViewProps> = ({ onLoginSuccess }) => {
                 </div>
               </div>
             </div>
-            {/* Decorative floaters */}
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/30 blur-3xl rounded-full" />
           </div>
         </div>
