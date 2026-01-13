@@ -1,11 +1,22 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize lazily to prevent crashing the whole app if the key is missing at load time
+const getAI = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey || apiKey === 'undefined' || apiKey === '') {
+    console.error("Gemini API Key is missing. Please set the API_KEY environment variable.");
+    return null;
+  }
+  return new GoogleGenAI({ apiKey });
+};
 
 export const geminiService = {
   async getSymptomAnalysis(symptoms: string) {
     try {
+      const ai = getAI();
+      if (!ai) return null;
+
       const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
         contents: `Analyze the following symptoms and provide a potential list of clinical considerations, triage level, and suggested follow-up questions for a medical professional. Symptoms: ${symptoms}`,
@@ -23,7 +34,6 @@ export const geminiService = {
           }
         }
       });
-      // Use .text property and trim it as recommended for JSON extraction
       const text = response.text;
       return text ? JSON.parse(text.trim()) : null;
     } catch (error) {
@@ -34,6 +44,9 @@ export const geminiService = {
 
   async draftSoapNotes(transcript: string) {
     try {
+      const ai = getAI();
+      if (!ai) return null;
+
       const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
         contents: `Convert the following patient consultation transcript into a professional SOAP note (Subjective, Objective, Assessment, Plan). Transcript: ${transcript}`,
@@ -51,7 +64,6 @@ export const geminiService = {
           }
         }
       });
-      // Use .text property and trim it as recommended for JSON extraction
       const text = response.text;
       return text ? JSON.parse(text.trim()) : null;
     } catch (error) {
