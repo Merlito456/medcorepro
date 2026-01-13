@@ -1,4 +1,3 @@
-
 export enum Module {
   DASHBOARD = 'DASHBOARD',
   PATIENTS = 'PATIENTS',
@@ -37,9 +36,7 @@ export interface Appointment {
   doctorName: string;
   time: string;
   date: string;
-  // Fix: Added 'Vaccination' to match usage in AppointmentsView.tsx selection options
   type: 'Checkup' | 'Follow-up' | 'Procedure' | 'Consultation' | 'Vaccination';
-  // Fix: Added 'In Progress' to resolve type overlap error in DashboardView.tsx (line 103)
   status: 'Confirmed' | 'Pending' | 'In Progress' | 'Completed' | 'Cancelled';
 }
 
@@ -50,4 +47,28 @@ export interface Medicine {
   expiry: string;
   price: number;
   isGeneric: boolean;
+}
+
+export interface Consultation {
+  id?: string;
+  patientId: string;
+  patientName: string;
+  subjective: string;
+  objective: string;
+  assessment: string;
+  plan: string;
+  transcript?: string;
+  date?: string;
+}
+
+export interface Invoice {
+  id: string;
+  patient: string;
+  total: number;
+  disc: number;
+  ph: number;
+  net: number;
+  status: 'Paid' | 'Pending' | 'Partial' | 'Unpaid';
+  method: string;
+  date: string;
 }
